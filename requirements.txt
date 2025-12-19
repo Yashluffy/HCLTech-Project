@@ -1,8 +1,8 @@
 streamlit
-langchain-groq
+langchain
 langchain-community
-langchain-huggingface
 langchain-core
+langchain-groq
 faiss-cpu
 sentence-transformers
-huggingface-hub
+pillow
