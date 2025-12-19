@@ -1,267 +1,183 @@
 import streamlit as st
 import json
-import re
 import os
-import pandas as pd # <--- ADDED PANDAS FOR ROBUST TABLES
+import re
+from PIL import Image
+
 from langchain_groq import ChatGroq
-from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
 
-# ==========================================
-# 1. CONFIGURATION & STYLING
-# ==========================================
-st.set_page_config(page_title="Mechanic AI: Fleet Command", page_icon="⚡", layout="wide")
+# =====================================================
+# STREAMLIT CONFIG
+# =====================================================
+st.set_page_config(
+    page_title="Mechanic AI Pro – HCLTech",
+    page_icon="🛠️",
+    layout="wide"
+)
 
-# Custom CSS (Only for headers/badges now, not tables)
+# =====================================================
+# SECRETS
+# =====================================================
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+
+llm = ChatGroq(
+    model_name="llama-3.1-8b-instant",
+    temperature=0.1,
+    api_key=GROQ_API_KEY
+)
+
+# =====================================================
+# PATHS (MATCH YOUR REPO)
+# =====================================================
+FAISS_PATH = "faiss_db_index_test"
+IMAGE_DIR = "extracted_images"
+VEHICLE_JSON = "vehicle_specs.json"
+
+PDF_FILES = [
+    "HAF-F16.pdf",
+    "motorcycles.pdf",
+    "sample-service-manual.pdf"
+]
+
+# =====================================================
+# LOAD VEHICLE SPECS
+# =====================================================
+@st.cache_data
+def load_vehicle_specs():
+    if os.path.exists(VEHICLE_JSON):
+        with open(VEHICLE_JSON, "r") as f:
+            return json.load(f)
+    return {}
+
+vehicle_specs = load_vehicle_specs()
+
+# =====================================================
+# LOAD FAISS VECTOR DB
+# =====================================================
+@st.cache_resource
+def load_faiss():
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
+    return FAISS.load_local(
+        FAISS_PATH,
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
+
+vector_db = load_faiss()
+
+# =====================================================
+# SESSION STATE
+# =====================================================
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# =====================================================
+# UI HEADER
+# =====================================================
 st.markdown("""
-<style>
-    .stApp { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
-    h1 { color: #2C3E50 !important; font-weight: 700; margin-bottom: 0px; }
-    .subtext { color: #666; font-size: 14px; margin-bottom: 20px; }
-    
-    /* Badges */
-    .badge-manual { background-color: #d4edda; color: #155724; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #c3e6cb; }
-    .badge-ai { background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #ffeeba; }
-    
-    /* Container for results */
-    .result-container { 
-        background: white; 
-        padding: 25px; 
-        border-radius: 12px; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-        border: 1px solid #e0e0e0; 
-        margin-top: 20px; 
-    }
-    
-    /* Sidebar Buttons */
-    .stButton>button { width: 100%; text-align: left; border-radius: 6px; height: auto; padding: 10px; }
-</style>
+<h1 style="text-align:center;">🛠️ Mechanic AI Pro</h1>
+<p style="text-align:center; color:gray;">
+HCLTech – Fleet, Aircraft & Vehicle Intelligence
+</p>
+<hr>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# 2. SECURE API KEY
-# ==========================================
-api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY") or "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"
+# =====================================================
+# SIDEBAR
+# =====================================================
+st.sidebar.header("📂 Knowledge Sources")
+st.sidebar.write("• F-16 Aircraft Manual")
+st.sidebar.write("• Motorcycle Service Guide")
+st.sidebar.write("• Fleet Service Manual")
+st.sidebar.write("• Vehicle Specs JSON")
+st.sidebar.write("• FAISS Vector DB")
 
-if not api_key:
-    st.error("🚨 API Key Missing! Please add GROQ_API_KEY to Streamlit Secrets.")
-    st.stop()
+# =====================================================
+# CORE AI FUNCTION
+# =====================================================
+def mechanic_ai(query: str):
+    query_lower = query.lower()
 
-# ==========================================
-# 3. LOAD BRAIN (Vector Store)
-# ==========================================
-@st.cache_resource
-def load_resources():
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    index_path = "faiss_db_index_test" 
-    try:
-        if os.path.exists(index_path):
-            return FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
-        return None
-    except Exception as e:
-        return None
+    # -----------------------------
+    # VEHICLE SPECS JSON SEARCH
+    # -----------------------------
+    for key, value in vehicle_specs.items():
+        if key.lower() in query_lower:
+            return f"### 📊 Vehicle Specs – {key}\n```json\n{json.dumps(value, indent=2)}\n```"
 
-vector_store = load_resources()
+    # -----------------------------
+    # VECTOR SEARCH (PDFs)
+    # -----------------------------
+    docs = vector_db.similarity_search(query, k=4)
+    context = "\n\n".join([d.page_content for d in docs])
 
-if not vector_store:
-    st.error("⚠️ Database not found! Please upload the 'faiss_db_index_test' folder.")
-    st.stop()
+    # -----------------------------
+    # LLM PROMPT
+    # -----------------------------
+    prompt = ChatPromptTemplate.from_messages([
+        ("system",
+         "You are an expert mechanical engineer and maintenance AI. "
+         "Answer only from the provided manuals and documents. "
+         "Be precise and technical."),
+        ("human",
+         "Context:\n{context}\n\nQuestion:\n{question}")
+    ])
 
-# ==========================================
-# 4. LOGIC HANDLERS
-# ==========================================
-llm = ChatGroq(temperature=0.1, model_name="llama-3.1-8b-instant", api_key=api_key)
+    response = llm.invoke(
+        prompt.format(context=context, question=query)
+    )
 
-rag_prompt = """
-You are a technical data extractor. Analyze Context for: '{question}'.
-RULES:
-1. Return ONLY valid JSON.
-2. Structure: {{ "specs": [ {{ "component": "...", "value": "...", "unit": "...", "description": "..." }} ] }}
-3. If NOT found, return {{ "specs": [] }}
-Context:
-{context}
-"""
+    return response.content
 
-general_prompt = """
-The user asked: '{question}'.
-We searched the manuals but found NO specific match.
-Answer based on general mechanical knowledge. Be concise.
-"""
+# =====================================================
+# CHAT DISPLAY
+# =====================================================
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-def clean_json(text):
-    try:
-        text = str(text).replace("```json", "").replace("```", "")
-        match = re.search(r"\{.*\}", text, re.DOTALL)
-        if match: return json.loads(match.group(0))
-    except: pass
-    return {"specs": []}
+# =====================================================
+# IMAGE HELPER
+# =====================================================
+def show_related_images(query):
+    if not os.path.exists(IMAGE_DIR):
+        return
 
-def detect_filter(query):
-    q = query.lower()
-    if any(x in q for x in ["f-16", "jet", "aircraft"]): return {"vehicle_type": "jet"}
-    if any(x in q for x in ["bike", "motorcycle", "ducati"]): return {"vehicle_type": "bike"}
-    if any(x in q for x in ["car", "ford", "f-150"]): return {"vehicle_type": "car"}
-    return None
-
-def process_query(query):
-    # 1. Chit Chat
-    if query.lower().strip() in ["hi", "hello", "help"]:
-        return {"type": "chat", "content": "👋 **System Ready.** I can access manuals for F-16 Jets, Ducati Bikes, and Ford F-150s."}
-
-    # 2. Search
-    active_filter = detect_filter(query)
-    try:
-        if active_filter: docs = vector_store.similarity_search(query, k=4, filter=active_filter)
-        else: docs = vector_store.similarity_search(query, k=4)
-    except: docs = []
-
-    # 3. Extract
-    if docs:
-        context = "\n\n".join([d.page_content for d in docs])
-        
-        # Get Images (Deduplicated)
-        found_images = []
-        seen = set()
-        for d in docs:
-            path = d.metadata.get("image_path")
-            if path and path not in seen:
-                found_images.append(path)
-                seen.add(path)
-
-        chain = ChatPromptTemplate.from_template(rag_prompt) | llm
-        response = chain.invoke({"context": context, "question": query})
-        data = clean_json(response.content)
-
-        if data.get("specs"):
-            return {
-                "type": "manual",
-                "specs": data["specs"],
-                "images": found_images,
-                "source": active_filter['vehicle_type'].upper() if active_filter else "DOCS"
-            }
-
-    # 4. Fallback
-    gen_chain = ChatPromptTemplate.from_template(general_prompt) | llm
-    res = gen_chain.invoke({"question": query})
-    return {"type": "general", "content": res.content}
-
-# ==========================================
-# 5. SIDEBAR
-# ==========================================
-with st.sidebar:
-    st.header("⚡ Fleet Control")
-    st.markdown("Select a vehicle query:")
-    
-    if "query_input" not in st.session_state:
-        st.session_state.query_input = ""
-
-    def set_query(q):
-        st.session_state.query_input = q
-
-    st.caption("🚗 **Ford F-150**")
-    if st.button("Suspension Torque Specs (Car)"): set_query("Torque specifications for front suspension (Car)")
-    if st.button("Fluid Capacities (Car)"): set_query("Fluid capacities (Car)")
-
-    st.caption("✈️ **F-16 Jet**")
-    if st.button("Engine Fire Procedure (Jet)"): set_query("Emergency procedure for engine fire on ground (F-16)")
-    if st.button("Gear Speed Limits (Jet)"): set_query("Landing gear extension speed limits (F-16)")
-    
-    st.caption("🏍️ **Ducati Bike**")
-    if st.button("Start Failure (Bike)"): set_query("Troubleshooting engine starting failure (Bike)")
-    if st.button("Chain Tension (Bike)"): set_query("Chain tension adjustment (Bike)")
-    
-    st.divider()
-    st.markdown("v3.3 • Native Tables")
-
-# ==========================================
-# 6. MAIN UI
-# ==========================================
-st.markdown("<h1>⚡ Mechanic AI <span style='font-size:20px; color:#aaa;'>FLEET COMMAND</span></h1>", unsafe_allow_html=True)
-st.markdown("<div class='subtext'>Multi-Modal Retrieval System (v3.0)</div>", unsafe_allow_html=True)
-
-# Search Input
-query = st.text_input("Ask a question...", value=st.session_state.query_input, placeholder="e.g. 'Tire pressure F-16'")
-
-if st.button("Search Manuals", type="primary"):
-    if not query:
-        st.warning("Please enter a query.")
-    else:
-        with st.spinner("⚙️ Analyzing Fleet Documents..."):
-            result = process_query(query)
-
-        # --- RENDER RESULTS ---
-        
-        # CASE 1: MANUAL DATA FOUND
-        if result['type'] == 'manual':
-            # 1. Badge & Header
-            st.markdown(f"""
-            <div class='result-container'>
-                <span class='badge-manual'>✓ OFFICIAL SOURCE: {result['source']}</span>
-                <h3 style='margin-top:10px; color:black;'>Technical Specifications</h3>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # 2. CREATE NATIVE DATAFRAME (The Fix)
-            # We convert JSON directly to a Pandas DataFrame.
-            # This GUARANTEES the data will show up.
-            df = pd.DataFrame(result['specs'])
-            
-            # Clean up columns for display
-            if not df.empty:
-                # Reorder and rename columns if they exist
-                desired_cols = ['component', 'value', 'unit', 'description']
-                # Filter to only existing columns
-                cols_to_use = [c for c in desired_cols if c in df.columns]
-                df = df[cols_to_use]
-                
-                # Rename for UI
-                column_map = {
-                    'component': 'Component / Step',
-                    'value': 'Value / Action',
-                    'unit': 'Unit',
-                    'description': 'Notes / Context'
-                }
-                df = df.rename(columns=column_map)
-                
-                # Display using Streamlit's native Table
-                st.dataframe(
-                    df, 
-                    use_container_width=True, 
-                    hide_index=True,
-                    column_config={
-                        "Value / Action": st.column_config.TextColumn(help="The specific value or action required."),
-                    }
+    for img in os.listdir(IMAGE_DIR):
+        if any(word in img.lower() for word in query.lower().split()):
+            try:
+                st.image(
+                    Image.open(os.path.join(IMAGE_DIR, img)),
+                    use_container_width=True
                 )
-            else:
-                st.warning("Data found, but table is empty.")
-            
-            # 3. Render Images
-            if result.get('images'):
-                st.markdown("<h4 style='margin-top:25px; color:#555;'>📷 Visual Reference</h4>", unsafe_allow_html=True)
-                cols = st.columns(min(3, len(result['images'])))
-                for idx, img_path in enumerate(result['images']):
-                    with cols[idx % 3]:
-                        if os.path.exists(img_path):
-                            st.image(img_path, caption=f"Figure {idx+1}", use_container_width=True)
-                        else:
-                            st.warning(f"Image missing: {img_path}")
+            except:
+                pass
 
-        # CASE 2: GENERAL KNOWLEDGE FALLBACK
-        elif result['type'] == 'general':
-            st.markdown(f"""
-            <div class='result-container'>
-                <span class='badge-ai'>⚠ GENERAL KNOWLEDGE</span>
-                <div style='margin-top:15px; color:#444; line-height:1.6;'>
-                    {result['content']}
-                </div>
-                <hr style='border:0; border-top:1px solid #eee; margin:15px 0;'>
-                <div style='font-size:12px; color:#888;'>
-                    *Data not found in official fleet documents. Response generated by AI logic.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+# =====================================================
+# USER INPUT
+# =====================================================
+user_input = st.chat_input("Ask about vehicles, aircraft, maintenance, specs...")
 
-        # CASE 3: CHIT CHAT
-        elif result['type'] == 'chat':
-            st.info(result['content'])
+if user_input:
+    st.session_state.messages.append(
+        {"role": "user", "content": user_input}
+    )
+
+    with st.chat_message("assistant"):
+        with st.spinner("Analyzing manuals & fleet data..."):
+            try:
+                answer = mechanic_ai(user_input)
+                st.markdown(answer)
+                show_related_images(user_input)
+
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": answer}
+                )
+
+            except Exception as e:
+                st.error(f"❌ Error: {e}")
