@@ -1,42 +1,46 @@
-# 🏎️ Fleet Command: Multi-Modal Vehicle Intelligence System
+# 🚗 Mechanic AI: Intelligent Vehicle Specification Extraction System
 
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://predii-intelligent-ai-bot-x8szf2yk5f.streamlit.app/)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=Streamlit&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=LangChain&logoColor=white)
-![Llama 3](https://img.shields.io/badge/Llama_3.3-040404?style=for-the-badge&logo=meta&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-Llama3.3-orange?style=for-the-badge&logo=meta&logoColor=white)
+![FAISS](https://img.shields.io/badge/VectorDB-FAISS-00d1ce?style=for-the-badge)
 
-> **A Unified RAG Pipeline that ingests Unstructured (PDF), Structured (CSV), and Hierarchical (JSON) data into a single queryable Vector Database.**
+## 📌 Project Overview
+**Mechanic AI** is a specialized Retrieval-Augmented Generation (RAG) system developed to automate the extraction of technical specifications from automotive service manuals.
 
----
+Service manuals are often hundreds of pages long with complex table structures. Standard RAG tools treat these PDFs as plain text, often failing to extract precise values like **torque settings**, **fluid capacities**, or **part dimensions** because they lose the alignment between columns and rows.
 
-## 📖 Project Overview
-
-**Fleet Command** is a Retrieval-Augmented Generation (RAG) system designed to solve the "Siloed Data" problem in automotive engineering.
-
-Standard RAG systems treat all documents as plain text, which leads to failure when processing **Technical Tables** or **Structured Data**. Fleet Command solves this by implementing a **Multi-Modal Ingestion Pipeline**: it applies specialized chunking algorithms to three distinct file formats—**PDFs (Cars), CSVs (Bikes), and JSONs (Jets)**—before unifying them into a single FAISS vector index. This allows users to ask complex questions across different vehicle domains from one simple interface.
+**Mechanic AI** solves this using a **Context-Aware Table Processing** engine that "reads" manuals like a human mechanic, identifying grid structures and locking headers to values before embedding.
 
 ---
 
 ## 🏗️ System Architecture
 
-The pipeline follows a **"Chunk-Embed-Retrieve"** strategy with custom pre-processing for each data type.
+The pipeline uses a **Hybrid Chunking Strategy** to handle the mixed-media nature of PDF manuals (Narrative Text + Structured Tables).
 
 ```mermaid
 graph TD
-    User[User Query] --> Retrieve[🔍 Similarity Search (Top 10)]
-    Retrieve --> Context[📄 Context Window]
-    Context --> LLM[🤖 Llama 3.3 (Groq)]
-    LLM --> Answer[Final Answer]
-
-    subgraph "Data Ingestion Pipeline"
-        PDF[🚗 PDF Manual] -->|Header Injection| Chunk1[Rich Text Chunks]
-        CSV[🏍️ Bike CSV] -->|Row-to-Sentence| Chunk2[Rich Text Chunks]
-        JSON[✈️ Jet JSON] -->|Hierarchy Flattening| Chunk3[Rich Text Chunks]
-        
-        Chunk1 --> Embed[Embeddings (HuggingFace)]
-        Chunk2 --> Embed
-        Chunk3 --> Embed
-        Embed --> DB[(FAISS Vector Store)]
+    PDF["📄 Uploaded Manual (PDF)"] --> Router{"Content Router"}
+    
+    Router -- "Narrative Text" --> Splitter["Recursive Text Splitter"]
+    Router -- "Table Grid" --> Plumber["🔧 pdfplumber Engine"]
+    
+    Splitter --> ChunkA["Text Chunks"]
+    
+    subgraph "Smart Header Injection"
+        Plumber --> Detect["Detect Headers"]
+        Detect --> Inject["Inject Header into Every Row"]
+        Inject --> ChunkB["Structured Data Chunks"]
     end
     
-    DB --> Retrieve
+    ChunkA --> Embed["Embeddings (HuggingFace)"]
+    ChunkB --> Embed
+    
+    Embed --> FAISS[("FAISS Vector Store")]
+    
+    Query["User Query"] --> FAISS
+    FAISS --> Context["Top 5 Semantic Matches"]
+    Context --> LLM["🤖 Groq Llama 3.3"]
+    LLM --> Answer["Final Technical Answer"]
