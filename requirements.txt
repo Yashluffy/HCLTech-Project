@@ -1,8 +1,10 @@
 streamlit
+pandas
 langchain
 langchain-community
 langchain-core
 langchain-groq
+langchain-huggingface
 faiss-cpu
 sentence-transformers
-pillow
+huggingface-hub
