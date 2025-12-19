@@ -1,0 +1,464 @@
+[
+    {
+        "component": "Brake disc shield bolts",
+        "spec_type": "Torque specification",
+        "value": "17",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Brake hose bracket bolt",
+        "spec_type": "Torque specification",
+        "value": "12",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Lower arm forward and rearward nuts",
+        "spec_type": "Torque specification",
+        "value": "350",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Lower ball joint nut",
+        "spec_type": "Torque specification",
+        "value": "175",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Shock absorber lower nuts",
+        "spec_type": "Torque specification",
+        "value": "90",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Shock absorber upper mount nuts",
+        "spec_type": "Torque specification",
+        "value": "63",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Shock rod nut",
+        "spec_type": "Torque specification",
+        "value": "55",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Stabilizer bar bracket nuts",
+        "spec_type": "Torque specification",
+        "value": "55",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Stabilizer bar link nuts",
+        "spec_type": "Torque specification",
+        "value": "70",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Tie-rod end nut",
+        "spec_type": "Torque specification",
+        "value": "115",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Upper arm-to-frame nuts",
+        "spec_type": "Torque specification",
+        "value": "150",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Upper ball joint nut",
+        "spec_type": "Torque specification",
+        "value": "115",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Wheel bearing and wheel hub bolts",
+        "spec_type": "Torque specification",
+        "value": "175",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Wheel speed sensor bolt",
+        "spec_type": "Torque specification",
+        "value": "18",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Wheel speed sensor harness bracket bolt",
+        "spec_type": "Torque specification",
+        "value": "12",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Front fork cap bolt",
+        "spec_type": "Torque specification",
+        "value": "23",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Front fork lower clamp bolt",
+        "spec_type": "Torque specification",
+        "value": "23",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Front fork upper clamp bolt",
+        "spec_type": "Torque specification",
+        "value": "23",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Handlebar holder mounting nut",
+        "spec_type": "Torque specification",
+        "value": "35",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Front fork damper rod bolt",
+        "spec_type": "Torque specification",
+        "value": "23",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Front fork inner rod lock-nut",
+        "spec_type": "Torque specification",
+        "value": "15",
+        "unit": "Nm",
+        "description": ""
+    },
+    {
+        "component": "Throttle",
+        "spec_type": "Action",
+        "value": "OFF",
+        "unit": null,
+        "description": "In case of engine fire on ground"
+    },
+    {
+        "component": "JFS switch",
+        "spec_type": "Action",
+        "value": "OFF",
+        "unit": null,
+        "description": "In case of engine fire on ground"
+    },
+    {
+        "component": "FUEL MASTER switch",
+        "spec_type": "Action",
+        "value": "OFF",
+        "unit": null,
+        "description": "In case of engine fire on ground"
+    },
+    {
+        "component": "ENG FEED knob",
+        "spec_type": "Action",
+        "value": "OFF",
+        "unit": null,
+        "description": "If external power is applied, in case of engine fire on ground"
+    },
+    {
+        "component": "Aircraft",
+        "spec_type": "Action",
+        "value": "Abandon",
+        "unit": null,
+        "description": "If fire continues"
+    },
+    {
+        "component": "Landing Gear",
+        "spec_type": "Extension Speed Limit",
+        "value": "190",
+        "unit": "knots",
+        "description": "Alternate LG extension should be accomplished at the lowest practical airspeed below this limit"
+    },
+    {
+        "component": "Landing Gear",
+        "spec_type": "Extension Speed Limit",
+        "value": "300",
+        "unit": "knots",
+        "description": "Alternate LG extension can be used up to this speed limit; however, the NLG may not fully extend until 190 knots"
+    },
+    {
+        "component": "Valve",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Clearance out of adjustment"
+    },
+    {
+        "component": "Valve guide",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Worn or poor seating"
+    },
+    {
+        "component": "Piston ring",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Excessively worn"
+    },
+    {
+        "component": "Cylinder bore",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Worn-down"
+    },
+    {
+        "component": "Starter motor",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Too slow cranking"
+    },
+    {
+        "component": "Spark plug",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Poor seating or fouled"
+    },
+    {
+        "component": "Ignition coil",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "CKP sensor",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "ECM",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "Wiring connection",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Open-circuited"
+    },
+    {
+        "component": "Fuel filter",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Clogged"
+    },
+    {
+        "component": "Fuel pump",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "Fuel pressure regulator",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "Fuel injector",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "TP sensor",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Out of adjustment or defective"
+    },
+    {
+        "component": "IAP sensor",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "IAT sensor",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "AP sensor",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "ECT sensor",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Defective"
+    },
+    {
+        "component": "ISC valve air passage way",
+        "spec_type": "Correction",
+        "value": null,
+        "unit": null,
+        "description": "Clogged"
+    },
+    {
+        "component": "Starter motor",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check if runs when terminal is connected to battery (+) terminal"
+    },
+    {
+        "component": "Starter relay",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check voltage at terminal"
+    },
+    {
+        "component": "Starter button",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check if effective"
+    },
+    {
+        "component": "Side-stand switch",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check if OK"
+    },
+    {
+        "component": "Starter clutch",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check if OK"
+    },
+    {
+        "component": "Ignition switch",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check if faulty"
+    },
+    {
+        "component": "Clutch lever position switch",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check if faulty"
+    },
+    {
+        "component": "Gear position switch",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check if faulty"
+    },
+    {
+        "component": "Turn signal/side-stand relay",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check if faulty"
+    },
+    {
+        "component": "Starter relay",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check if faulty"
+    },
+    {
+        "component": "O/W wire",
+        "spec_type": "Action",
+        "value": null,
+        "unit": null,
+        "description": "Check voltage between O/W wire and ground"
+    },
+    {
+        "component": "Drive chain slack",
+        "spec_type": "Chain tension adjustment",
+        "value": "20-30",
+        "unit": "mm (0.8-1.2 in)",
+        "description": "Standard slack at the middle of the chain between the engine and rear sprockets"
+    },
+    {
+        "component": "Chain adjuster bolts",
+        "spec_type": "Chain tension adjustment",
+        "value": "Loosen or tighten",
+        "unit": null,
+        "description": "Until there is 20-30 mm (0.8-1.2 in) of slack at the middle of the chain"
+    },
+    {
+        "component": "Axle nut",
+        "spec_type": "Chain tension adjustment",
+        "value": "Tighten",
+        "unit": null,
+        "description": "After adjusting the drive chain slack"
+    },
+    {
+        "component": "Axle nut",
+        "spec_type": "Chain tension adjustment",
+        "value": "100",
+        "unit": "N\u00b7m (10.0 kgf-m, 72.5 lb-ft)",
+        "description": "Tightening torque"
+    },
+    {
+        "component": "Chain adjuster lock-nuts",
+        "spec_type": "Chain tension adjustment",
+        "value": "Tighten",
+        "unit": null,
+        "description": "Securely after adjusting the drive chain"
+    },
+    {
+        "component": "Cam chain tension adjuster",
+        "spec_type": "Chain tension adjustment",
+        "value": "23",
+        "unit": "N\u00b7m (2.3 kgf-m, 16.5 lb-ft)",
+        "description": "Tightening torque for service cap"
+    },
+    {
+        "component": "Cam chain tension adjuster mounting bolt",
+        "spec_type": "Chain tension adjustment",
+        "value": "10",
+        "unit": "N\u00b7m (1.0 kgf-m, 7.0 lb-ft)",
+        "description": "Tightening torque"
+    }
+]
