@@ -12,62 +12,28 @@ from langchain_core.prompts import ChatPromptTemplate
 # ==========================================
 st.set_page_config(page_title="Mechanic AI: Fleet Command", page_icon="⚡", layout="wide")
 
-# --- UPDATED CSS (Forces Black Text on White Cards) ---
+# Custom CSS to match your Notebook's "Pro" look
 st.markdown("""
 <style>
-    /* Force Light Mode styles for specific elements */
     .stApp { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
     
     /* Header */
-    h1 { color: #2C3E50 !important; }
-    
-    /* Result Card Container */
-    .result-container { 
-        background-color: #ffffff !important; 
-        padding: 25px; 
-        border-radius: 12px; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-        border: 1px solid #e0e0e0; 
-        margin-top: 20px; 
-    }
-    
-    /* Force ALL text inside the result container to be dark */
-    .result-container h3 { color: #2d3436 !important; }
-    .result-container p { color: #2d3436 !important; }
-    .result-container span { color: #2d3436 !important; }
-    .result-container div { color: #2d3436 !important; }
-
-    /* Table Styling */
-    .styled-table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        margin-top: 15px; 
-        font-size: 15px; 
-        color: #2d3436 !important; /* Force text color */
-    }
-    
-    .styled-table th { 
-        text-align: left; 
-        background-color: #f1f3f5; 
-        color: #2d3436 !important; /* Dark text for headers */
-        padding: 12px; 
-        border-bottom: 2px solid #ddd; 
-    }
-    
-    .styled-table td { 
-        padding: 12px; 
-        border-bottom: 1px solid #eee; 
-        vertical-align: top; 
-        color: #2d3436 !important; /* Dark text for cells */
-    }
-    
-    /* Highlights */
-    .val-text { font-weight: 700; color: #d63031 !important; }
-    .desc-text { color: #636e72 !important; font-style: italic; font-size: 0.9em; }
+    h1 { color: #2C3E50 !important; font-weight: 700; margin-bottom: 0px; }
+    .subtext { color: #666; font-size: 14px; margin-bottom: 20px; }
     
     /* Badges */
-    .badge-manual { background-color: #d4edda; color: #155724 !important; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #c3e6cb; }
-    .badge-ai { background-color: #fff3cd; color: #856404 !important; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #ffeeba; }
+    .badge-manual { background-color: #d4edda; color: #155724; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #c3e6cb; }
+    .badge-ai { background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #ffeeba; }
+    
+    /* Result Card */
+    .result-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; margin-top: 20px; }
+    
+    /* Table Styling */
+    .styled-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 15px; }
+    .styled-table th { text-align: left; color: #555; background-color: #f1f3f5; padding: 10px; border-bottom: 2px solid #ddd; }
+    .styled-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; color: #333; }
+    .val-text { font-weight: 700; color: #d63031; }
+    .desc-text { color: #636e72; font-style: italic; font-size: 0.9em; }
     
     /* Sidebar Buttons */
     .stButton>button { width: 100%; text-align: left; border-radius: 6px; height: auto; padding: 10px; }
@@ -77,6 +43,7 @@ st.markdown("""
 # ==========================================
 # 2. SECURE API KEY
 # ==========================================
+# Look for key in Secrets, Env Var, or default to the one you provided
 api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY") or "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"
 
 if not api_key:
@@ -89,7 +56,7 @@ if not api_key:
 @st.cache_resource
 def load_resources():
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    index_path = "faiss_db_index_test" # <--- MAKE SURE THIS MATCHES YOUR FOLDER NAME
+    index_path = "faiss_db_index_test"  
     try:
         if os.path.exists(index_path):
             return FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
@@ -100,7 +67,7 @@ def load_resources():
 vector_store = load_resources()
 
 if not vector_store:
-    st.error(f"⚠️ Database not found! Please upload the 'faiss_db_index_test' folder.")
+    st.error("⚠️ Database not found! Please upload the 'faiss_db_index_test' folder.")
     st.stop()
 
 # ==========================================
@@ -186,28 +153,25 @@ def process_query(query):
 # ==========================================
 with st.sidebar:
     st.header("⚡ Fleet Control")
-    st.markdown("Select a vehicle query:")
     
+    # Initialize session state for query input
     if "query_input" not in st.session_state:
         st.session_state.query_input = ""
 
     def set_query(q):
         st.session_state.query_input = q
 
-    st.caption("🚗 **Ford F-150**")
-    if st.button("Suspension Torque Specs (Car)"): set_query("Torque specifications for front suspension (Car)")
-    if st.button("Fluid Capacities (Car)"): set_query("Fluid capacities (Car)")
+    st.markdown("### 🚗 Car")
+    if st.button("Suspension Torque Specs"): set_query("Torque specifications for front suspension (Car)")
+    if st.button("Fluid Capacities"): set_query("Fluid capacities (Car)")
 
-    st.caption("✈️ **F-16 Jet**")
-    if st.button("Engine Fire Procedure (Jet)"): set_query("Emergency procedure for engine fire on ground (F-16)")
-    if st.button("Gear Speed Limits (Jet)"): set_query("Landing gear extension speed limits (F-16)")
+    st.markdown("### ✈️ Jet")
+    if st.button("Engine Fire Procedure"): set_query("Emergency procedure for engine fire on ground (F-16)")
+    if st.button("Landing Gear Speed"): set_query("Landing gear extension speed limits (F-16)")
     
-    st.caption("🏍️ **Ducati Bike**")
-    if st.button("Start Failure (Bike)"): set_query("Troubleshooting engine starting failure (Bike)")
-    if st.button("Chain Tension (Bike)"): set_query("Chain tension adjustment (Bike)")
-    
-    st.divider()
-    st.markdown("v3.2 • High Contrast Mode")
+    st.markdown("### 🏍️ Bike")
+    if st.button("Start Failure"): set_query("Troubleshooting engine starting failure (Bike)")
+    if st.button("Chain Tension"): set_query("Chain tension adjustment (Bike)")
 
 # ==========================================
 # 6. MAIN UI
@@ -229,7 +193,14 @@ if st.button("Search Manuals", type="primary"):
         
         # CASE 1: MANUAL DATA FOUND
         if result['type'] == 'manual':
-            # Construct HTML for Table
+            # 1. Badge & Container Start
+            st.markdown(f"""
+            <div class='result-container'>
+                <span class='badge-manual'>✓ OFFICIAL SOURCE: {result['source']}</span>
+                <h3 style='margin-top:15px; margin-bottom:10px;'>Technical Specifications</h3>
+            """, unsafe_allow_html=True)
+            
+            # 2. Build HTML Table dynamically
             rows = ""
             for item in result['specs']:
                 unit = item.get('unit') or ""
@@ -241,37 +212,37 @@ if st.button("Search Manuals", type="primary"):
                 </tr>
                 """
             
-            html_table = f"""
-            <div class='result-container'>
-                <span class='badge-manual'>✓ OFFICIAL SOURCE: {result['source']}</span>
-                <h3 style='margin-top:15px; margin-bottom:10px;'>Specifications Found</h3>
-                <table class='styled-table'>
-                    <thead>
-                        <tr><th width='35%'>Component / Step</th><th width='25%'>Value / Action</th><th>Notes</th></tr>
-                    </thead>
-                    <tbody>{rows}</tbody>
-                </table>
-            </div>
+            table_html = f"""
+            <table class='styled-table'>
+                <thead>
+                    <tr><th width='35%'>Component / Step</th><th width='25%'>Value / Action</th><th>Notes</th></tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
             """
-            st.markdown(html_table, unsafe_allow_html=True)
+            st.markdown(table_html, unsafe_allow_html=True)
             
-            # Render Images Separately to avoid HTML layout issues
+            # 3. Images Section
             if result.get('images'):
                 st.markdown("<h4 style='margin-top:25px; color:#555;'>📷 Visual Reference</h4>", unsafe_allow_html=True)
+                
+                # Create columns for images
                 cols = st.columns(min(3, len(result['images'])))
                 for idx, img_path in enumerate(result['images']):
                     with cols[idx % 3]:
                         if os.path.exists(img_path):
                             st.image(img_path, caption=f"Figure {idx+1}", use_container_width=True)
                         else:
-                            st.warning(f"Image missing: {img_path}")
+                            st.error(f"Image missing: {img_path}")
+            
+            st.markdown("</div>", unsafe_allow_html=True) # Close Container
 
         # CASE 2: GENERAL KNOWLEDGE FALLBACK
         elif result['type'] == 'general':
             st.markdown(f"""
             <div class='result-container'>
                 <span class='badge-ai'>⚠ GENERAL KNOWLEDGE</span>
-                <div style='margin-top:15px; line-height:1.6;'>
+                <div style='margin-top:15px; color:#444; line-height:1.6;'>
                     {result['content']}
                 </div>
                 <hr style='border:0; border-top:1px solid #eee; margin:15px 0;'>
