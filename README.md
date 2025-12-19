@@ -8,7 +8,7 @@
 ![FAISS](https://img.shields.io/badge/VectorDB-FAISS-00d1ce?style=for-the-badge)
 
 ## 📌 Project Overview
-**Mechanic AI** is a specialized Multi-Modal RAG system designed to automate the extraction of technical data from automotive service manuals.
+**Mechanic AI** is a specialized Multi-Agent RAG system designed to automate the extraction of technical data from automotive service manuals.
 
 Service manuals are complex documents containing **narrative text**, **structured specification tables**, and **critical visual diagrams** (wiring, exploded views). Standard RAG tools ignore images and mangle tables.
 
