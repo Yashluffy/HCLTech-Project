@@ -12,35 +12,42 @@ from langchain_core.prompts import ChatPromptTemplate
 # ==========================================
 st.set_page_config(page_title="Mechanic AI: Fleet Command", page_icon="⚡", layout="wide")
 
-# Custom CSS for "Pro" Look
+# Custom CSS to match your Notebook's "Pro" look
 st.markdown("""
 <style>
     .stApp { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
     
-    /* Header Styles */
-    h1 { color: #2C3E50 !important; font-weight: 700; }
-    h3 { color: #34495E !important; }
+    /* Header */
+    h1 { color: #2C3E50 !important; font-weight: 700; margin-bottom: 0px; }
+    .subtext { color: #666; font-size: 14px; margin-bottom: 20px; }
     
-    /* Badge Styles */
-    .badge-manual { background-color: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8em; border: 1px solid #c3e6cb; }
-    .badge-ai { background-color: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8em; border: 1px solid #ffeeba; }
+    /* Badges */
+    .badge-manual { background-color: #d4edda; color: #155724; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #c3e6cb; }
+    .badge-ai { background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #ffeeba; }
     
-    /* Card/Table Styles */
-    .result-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e0e0e0; }
+    /* Result Card */
+    .result-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; margin-top: 20px; }
+    
+    /* Table Styling */
+    .styled-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 15px; }
+    .styled-table th { text-align: left; color: #555; background-color: #f1f3f5; padding: 10px; border-bottom: 2px solid #ddd; }
+    .styled-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; color: #333; }
+    .val-text { font-weight: 700; color: #d63031; }
+    .desc-text { color: #636e72; font-style: italic; font-size: 0.9em; }
     
     /* Sidebar Buttons */
-    .stButton>button { width: 100%; border-radius: 6px; text-align: left; }
+    .stButton>button { width: 100%; text-align: left; border-radius: 6px; height: auto; padding: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
 # 2. SECURE API KEY
 # ==========================================
-# Try to get key from Secrets (Cloud) or Environment (Local)
-api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+# Look for key in Secrets, Env Var, or default to the one you provided
+api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY") or "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"
 
 if not api_key:
-    st.error("🚨 API Key Missing! Please add `GROQ_API_KEY` to Streamlit Secrets.")
+    st.error("🚨 API Key Missing! Please add GROQ_API_KEY to Streamlit Secrets.")
     st.stop()
 
 # ==========================================
@@ -48,20 +55,13 @@ if not api_key:
 # ==========================================
 @st.cache_resource
 def load_resources():
-    # Use the same model you used for ingestion
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    
-    # Path to your FAISS index folder
-    # IMPORTANT: Ensure you uploaded the folder 'faiss_db_index' containing .faiss and .pkl files
     index_path = "faiss_db_index_test" 
-    
     try:
         if os.path.exists(index_path):
             return FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
-        else:
-            return None
+        return None
     except Exception as e:
-        st.error(f"Error loading database: {e}")
         return None
 
 vector_store = load_resources()
@@ -71,7 +71,7 @@ if not vector_store:
     st.stop()
 
 # ==========================================
-# 4. LOGIC HANDLERS (Same as Notebook)
+# 4. LOGIC HANDLERS
 # ==========================================
 llm = ChatGroq(temperature=0.1, model_name="llama-3.1-8b-instant", api_key=api_key)
 
@@ -88,7 +88,7 @@ Context:
 general_prompt = """
 The user asked: '{question}'.
 We searched the manuals but found NO specific match.
-Answer based on general mechanical knowledge. Be concise and helpful.
+Answer based on general mechanical knowledge. Be concise.
 """
 
 def clean_json(text):
@@ -149,83 +149,109 @@ def process_query(query):
     return {"type": "general", "content": res.content}
 
 # ==========================================
-# 5. SIDEBAR (The "Chip" Interface)
+# 5. SIDEBAR (Presets)
 # ==========================================
 with st.sidebar:
     st.header("⚡ Fleet Control")
-    st.markdown("Select a vehicle query:")
     
-    # Initialize session state for query
+    # Initialize session state for query input
     if "query_input" not in st.session_state:
         st.session_state.query_input = ""
 
-    # Helper to set query
     def set_query(q):
         st.session_state.query_input = q
 
-    st.caption("🚗 **Ford F-150**")
-    if st.button("Suspension Torque Specs (Car)"): set_query("Torque specifications for front suspension (Car)")
-    if st.button("Fluid Capacities (Car)"): set_query("Fluid capacities (Car)")
+    st.markdown("### 🚗 Car")
+    if st.button("Suspension Torque Specs"): set_query("Torque specifications for front suspension (Car)")
+    if st.button("Fluid Capacities"): set_query("Fluid capacities (Car)")
+
+    st.markdown("### ✈️ Jet")
+    if st.button("Engine Fire Procedure"): set_query("Emergency procedure for engine fire on ground (F-16)")
+    if st.button("Landing Gear Speed"): set_query("Landing gear extension speed limits (F-16)")
     
-    st.caption("✈️ **F-16 Jet**")
-    if st.button("Engine Fire Procedure (Jet)"): set_query("Emergency procedure for engine fire on ground (F-16)")
-    if st.button("Gear Speed Limits (Jet)"): set_query("Landing gear extension speed limits (F-16)")
-    
-    st.caption("🏍️ **Ducati Bike**")
-    if st.button("Start Failure (Bike)"): set_query("Troubleshooting engine starting failure (Bike)")
-    if st.button("Chain Tension (Bike)"): set_query("Chain tension adjustment (Bike)")
-    
-    st.divider()
-    st.markdown("v3.0 • Multi-Modal RAG")
+    st.markdown("### 🏍️ Bike")
+    if st.button("Start Failure"): set_query("Troubleshooting engine starting failure (Bike)")
+    if st.button("Chain Tension"): set_query("Chain tension adjustment (Bike)")
 
 # ==========================================
 # 6. MAIN UI
 # ==========================================
-st.title("Mechanic AI: Fleet Command")
-st.markdown("Ask about technical specs, procedures, or diagnostics.")
+st.markdown("<h1>⚡ Mechanic AI <span style='font-size:20px; color:#aaa;'>FLEET COMMAND</span></h1>", unsafe_allow_html=True)
+st.markdown("<div class='subtext'>Multi-Modal Retrieval System (v3.0)</div>", unsafe_allow_html=True)
 
 # Search Input
-query = st.text_input("Enter your question:", value=st.session_state.query_input, placeholder="e.g., 'Tire pressure F-16'")
+query = st.text_input("Ask a question...", value=st.session_state.query_input, placeholder="e.g. 'Tire pressure F-16'")
 
 if st.button("Search Manuals", type="primary"):
     if not query:
-        st.warning("Please enter a query first.")
+        st.warning("Please enter a query.")
     else:
-        with st.spinner(f"🔍 Scanning Fleet Documents for '{query}'..."):
+        with st.spinner("⚙️ Analyzing Fleet Documents..."):
             result = process_query(query)
 
-        # --- DISPLAY RESULTS ---
+        # --- RENDER RESULTS ---
         
-        # CASE 1: MANUAL DATA (Success)
+        # CASE 1: MANUAL DATA FOUND
         if result['type'] == 'manual':
-            st.markdown(f"<div class='result-card'>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge-manual'>✅ OFFICIAL SOURCE: {result['source']}</span>", unsafe_allow_html=True)
-            st.markdown("### Specifications Found")
+            # 1. Badge & Container Start
+            st.markdown(f"""
+            <div class='result-container'>
+                <span class='badge-manual'>✓ OFFICIAL SOURCE: {result['source']}</span>
+                <h3 style='margin-top:15px; margin-bottom:10px;'>Technical Specifications</h3>
+            """, unsafe_allow_html=True)
             
-            # Display Table
-            st.table(result['specs'])
+            # 2. Build HTML Table dynamically
+            rows = ""
+            for item in result['specs']:
+                unit = item.get('unit') or ""
+                rows += f"""
+                <tr>
+                    <td><strong>{item['component']}</strong></td>
+                    <td class='val-text'>{item['value']} {unit}</td>
+                    <td class='desc-text'>{item.get('description', '-')}</td>
+                </tr>
+                """
             
-            # Display Images
+            table_html = f"""
+            <table class='styled-table'>
+                <thead>
+                    <tr><th width='35%'>Component / Step</th><th width='25%'>Value / Action</th><th>Notes</th></tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+            """
+            st.markdown(table_html, unsafe_allow_html=True)
+            
+            # 3. Images Section
             if result.get('images'):
-                st.markdown("#### 📷 Visual Reference")
-                cols = st.columns(len(result['images']))
+                st.markdown("<h4 style='margin-top:25px; color:#555;'>📷 Visual Reference</h4>", unsafe_allow_html=True)
+                
+                # Create columns for images
+                cols = st.columns(min(3, len(result['images'])))
                 for idx, img_path in enumerate(result['images']):
-                    # Handle image path (Streamlit needs correct relative path)
-                    if os.path.exists(img_path):
-                        st.image(img_path, caption=f"Figure {idx+1}", use_container_width=True)
-                    else:
-                        st.warning(f"⚠️ Image found in index but missing on disk: {img_path}")
+                    with cols[idx % 3]:
+                        if os.path.exists(img_path):
+                            st.image(img_path, caption=f"Figure {idx+1}", use_container_width=True)
+                        else:
+                            st.error(f"Image missing: {img_path}")
             
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True) # Close Container
 
-        # CASE 2: GENERAL KNOWLEDGE (Fallback)
+        # CASE 2: GENERAL KNOWLEDGE FALLBACK
         elif result['type'] == 'general':
-            st.markdown(f"<div class='result-card'>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge-ai'>⚠️ AI GENERATED (Not in Manual)</span>", unsafe_allow_html=True)
-            st.warning("We could not find this specific data in the uploaded manuals. Here is a general answer based on AI knowledge:")
-            st.info(result['content'])
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class='result-container'>
+                <span class='badge-ai'>⚠ GENERAL KNOWLEDGE</span>
+                <div style='margin-top:15px; color:#444; line-height:1.6;'>
+                    {result['content']}
+                </div>
+                <hr style='border:0; border-top:1px solid #eee; margin:15px 0;'>
+                <div style='font-size:12px; color:#888;'>
+                    *Data not found in official fleet documents. Response generated by AI logic.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         # CASE 3: CHIT CHAT
         elif result['type'] == 'chat':
-            st.markdown(f"<div class='result-card'>{result['content']}</div>", unsafe_allow_html=True)
+            st.info(result['content'])
