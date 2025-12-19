@@ -12,7 +12,7 @@ from langchain_core.prompts import ChatPromptTemplate
 # ==========================================
 st.set_page_config(page_title="Mechanic AI: Fleet Command", page_icon="⚡", layout="wide")
 
-# Custom CSS to match your Notebook's "Pro" look
+# Custom CSS
 st.markdown("""
 <style>
     .stApp { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
@@ -25,13 +25,21 @@ st.markdown("""
     .badge-manual { background-color: #d4edda; color: #155724; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #c3e6cb; }
     .badge-ai { background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #ffeeba; }
     
-    /* Result Card */
-    .result-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; margin-top: 20px; }
+    /* Result Card - Forces text color to black to prevent "invisible text" issues */
+    .result-container { 
+        background: white; 
+        padding: 30px; 
+        border-radius: 12px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+        border: 1px solid #e0e0e0; 
+        margin-top: 20px; 
+        color: #000000 !important; 
+    }
     
     /* Table Styling */
-    .styled-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 15px; }
-    .styled-table th { text-align: left; color: #555; background-color: #f1f3f5; padding: 10px; border-bottom: 2px solid #ddd; }
-    .styled-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; color: #333; }
+    .styled-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 15px; }
+    .styled-table th { text-align: left; color: #444; background-color: #f1f3f5; padding: 12px; border-bottom: 2px solid #ddd; }
+    .styled-table td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: top; color: #333; }
     .val-text { font-weight: 700; color: #d63031; }
     .desc-text { color: #636e72; font-style: italic; font-size: 0.9em; }
     
@@ -43,7 +51,6 @@ st.markdown("""
 # ==========================================
 # 2. SECURE API KEY
 # ==========================================
-# Look for key in Secrets, Env Var, or default to the one you provided
 api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY") or "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"
 
 if not api_key:
@@ -153,6 +160,7 @@ def process_query(query):
 # ==========================================
 with st.sidebar:
     st.header("⚡ Fleet Control")
+    st.markdown("Select a vehicle query:")
     
     # Initialize session state for query input
     if "query_input" not in st.session_state:
@@ -161,17 +169,20 @@ with st.sidebar:
     def set_query(q):
         st.session_state.query_input = q
 
-    st.markdown("### 🚗 Car")
-    if st.button("Suspension Torque Specs"): set_query("Torque specifications for front suspension (Car)")
-    if st.button("Fluid Capacities"): set_query("Fluid capacities (Car)")
+    st.caption("🚗 **Ford F-150**")
+    if st.button("Suspension Torque Specs (Car)"): set_query("Torque specifications for front suspension (Car)")
+    if st.button("Fluid Capacities (Car)"): set_query("Fluid capacities (Car)")
 
-    st.markdown("### ✈️ Jet")
-    if st.button("Engine Fire Procedure"): set_query("Emergency procedure for engine fire on ground (F-16)")
-    if st.button("Landing Gear Speed"): set_query("Landing gear extension speed limits (F-16)")
+    st.caption("✈️ **F-16 Jet**")
+    if st.button("Engine Fire Procedure (Jet)"): set_query("Emergency procedure for engine fire on ground (F-16)")
+    if st.button("Gear Speed Limits (Jet)"): set_query("Landing gear extension speed limits (F-16)")
     
-    st.markdown("### 🏍️ Bike")
-    if st.button("Start Failure"): set_query("Troubleshooting engine starting failure (Bike)")
-    if st.button("Chain Tension"): set_query("Chain tension adjustment (Bike)")
+    st.caption("🏍️ **Ducati Bike**")
+    if st.button("Start Failure (Bike)"): set_query("Troubleshooting engine starting failure (Bike)")
+    if st.button("Chain Tension (Bike)"): set_query("Chain tension adjustment (Bike)")
+    
+    st.divider()
+    st.markdown("v3.1 • Fixed Render Logic")
 
 # ==========================================
 # 6. MAIN UI
@@ -189,18 +200,19 @@ if st.button("Search Manuals", type="primary"):
         with st.spinner("⚙️ Analyzing Fleet Documents..."):
             result = process_query(query)
 
-        # --- RENDER RESULTS ---
+        # --- RENDER RESULTS (FIXED BLOCK LOGIC) ---
         
         # CASE 1: MANUAL DATA FOUND
         if result['type'] == 'manual':
-            # 1. Badge & Container Start
-            st.markdown(f"""
+            # --- BUILD HTML STRING FIRST ---
+            # 1. Badge & Header
+            html_content = f"""
             <div class='result-container'>
                 <span class='badge-manual'>✓ OFFICIAL SOURCE: {result['source']}</span>
-                <h3 style='margin-top:15px; margin-bottom:10px;'>Technical Specifications</h3>
-            """, unsafe_allow_html=True)
+                <h3 style='margin-top:15px; margin-bottom:10px; color:#333;'>Specifications Found</h3>
+            """
             
-            # 2. Build HTML Table dynamically
+            # 2. Build Rows
             rows = ""
             for item in result['specs']:
                 unit = item.get('unit') or ""
@@ -212,7 +224,8 @@ if st.button("Search Manuals", type="primary"):
                 </tr>
                 """
             
-            table_html = f"""
+            # 3. Close Table
+            html_content += f"""
             <table class='styled-table'>
                 <thead>
                     <tr><th width='35%'>Component / Step</th><th width='25%'>Value / Action</th><th>Notes</th></tr>
@@ -220,22 +233,24 @@ if st.button("Search Manuals", type="primary"):
                 <tbody>{rows}</tbody>
             </table>
             """
-            st.markdown(table_html, unsafe_allow_html=True)
             
-            # 3. Images Section
+            # 4. Close Div
+            html_content += "</div>"
+            
+            # --- RENDER HTML ---
+            st.markdown(html_content, unsafe_allow_html=True)
+            
+            # --- RENDER IMAGES (Separate Streamlit Elements) ---
             if result.get('images'):
                 st.markdown("<h4 style='margin-top:25px; color:#555;'>📷 Visual Reference</h4>", unsafe_allow_html=True)
                 
-                # Create columns for images
                 cols = st.columns(min(3, len(result['images'])))
                 for idx, img_path in enumerate(result['images']):
                     with cols[idx % 3]:
                         if os.path.exists(img_path):
                             st.image(img_path, caption=f"Figure {idx+1}", use_container_width=True)
                         else:
-                            st.error(f"Image missing: {img_path}")
-            
-            st.markdown("</div>", unsafe_allow_html=True) # Close Container
+                            st.warning(f"Image not found on disk: {img_path}")
 
         # CASE 2: GENERAL KNOWLEDGE FALLBACK
         elif result['type'] == 'general':
