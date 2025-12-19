@@ -53,7 +53,7 @@ def load_resources():
     
     # Path to your FAISS index folder
     # IMPORTANT: Ensure you uploaded the folder 'faiss_db_index' containing .faiss and .pkl files
-    index_path = "faiss_db_index" 
+    index_path = "faiss_db_index_test" 
     
     try:
         if os.path.exists(index_path):
@@ -67,7 +67,7 @@ def load_resources():
 vector_store = load_resources()
 
 if not vector_store:
-    st.error("⚠️ Database not found! Please upload the 'faiss_db_index' folder.")
+    st.error("⚠️ Database not found! Please upload the 'faiss_db_index_test' folder.")
     st.stop()
 
 # ==========================================
