@@ -1,4 +1,4 @@
-# 🚗 Mechanic AI: Intelligent Vehicle Specification Extraction System
+# 🚗 Mechanic AI: Multi-Modal Vehicle Specification System
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://predii-intelligent-ai-bot-x8szf2yk5f.streamlit.app/)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
@@ -8,35 +8,49 @@
 ![FAISS](https://img.shields.io/badge/VectorDB-FAISS-00d1ce?style=for-the-badge)
 
 ## 📌 Project Overview
-**Mechanic AI** is a specialized Retrieval-Augmented Generation (RAG) system developed to automate the extraction of technical specifications from automotive service manuals.
+**Mechanic AI** is a specialized Multi-Modal RAG system designed to automate the extraction of technical data from automotive service manuals.
 
-Service manuals are often hundreds of pages long with complex table structures. Standard RAG tools treat these PDFs as plain text, often failing to extract precise values like **torque settings**, **fluid capacities**, or **part dimensions** because they lose the alignment between columns and rows.
+Service manuals are complex documents containing **narrative text**, **structured specification tables**, and **critical visual diagrams** (wiring, exploded views). Standard RAG tools ignore images and mangle tables.
 
-**Mechanic AI** solves this using a **Context-Aware Table Processing** engine that "reads" manuals like a human mechanic, identifying grid structures and locking headers to values before embedding.
+**Mechanic AI** solves this using a **Tri-Modal Extraction Engine**:
+1.  **Text:** Recursive chunking for instructions.
+2.  **Tables:** Context-aware header injection for specs.
+3.  **Images:** Vision-based captioning to make diagrams searchable.
 
 ---
 
 ## 🏗️ System Architecture
 
-The pipeline uses a **Hybrid Chunking Strategy** to handle the mixed-media nature of PDF manuals (Narrative Text + Structured Tables).
+The pipeline uses a **Content Router** to split the PDF into three streams, processing each media type with a specialized strategy before unifying them in the Vector Database.
 
 ```mermaid
 graph TD
     PDF["📄 Uploaded Manual (PDF)"] --> Router{"Content Router"}
     
+    %% Stream 1: Text
     Router -- "Narrative Text" --> Splitter["Recursive Text Splitter"]
-    Router -- "Table Grid" --> Plumber["🔧 pdfplumber Engine"]
-    
     Splitter --> ChunkA["Text Chunks"]
     
+    %% Stream 2: Tables
+    Router -- "Table Grid" --> Plumber["🔧 pdfplumber Engine"]
     subgraph "Smart Header Injection"
         Plumber --> Detect["Detect Headers"]
         Detect --> Inject["Inject Header into Every Row"]
         Inject --> ChunkB["Structured Data Chunks"]
     end
     
+    %% Stream 3: Images (New)
+    Router -- "Visual Diagrams" --> Extractor["Image Extractor"]
+    subgraph "Vision Processing"
+        Extractor --> VisionModel["👁️ Vision Model (Captioning)"]
+        VisionModel --> Desc["Generate Technical Description"]
+        Desc --> ChunkC["Image Context Chunks"]
+    end
+    
+    %% Unification
     ChunkA --> Embed["Embeddings (HuggingFace)"]
     ChunkB --> Embed
+    ChunkC --> Embed
     
     Embed --> FAISS[("FAISS Vector Store")]
     
