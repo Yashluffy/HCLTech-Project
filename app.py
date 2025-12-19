@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import re
 import os
+import pandas as pd # <--- ADDED PANDAS FOR ROBUST TABLES
 from langchain_groq import ChatGroq
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -12,12 +13,10 @@ from langchain_core.prompts import ChatPromptTemplate
 # ==========================================
 st.set_page_config(page_title="Mechanic AI: Fleet Command", page_icon="⚡", layout="wide")
 
-# Custom CSS
+# Custom CSS (Only for headers/badges now, not tables)
 st.markdown("""
 <style>
     .stApp { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
-    
-    /* Header */
     h1 { color: #2C3E50 !important; font-weight: 700; margin-bottom: 0px; }
     .subtext { color: #666; font-size: 14px; margin-bottom: 20px; }
     
@@ -25,23 +24,15 @@ st.markdown("""
     .badge-manual { background-color: #d4edda; color: #155724; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #c3e6cb; }
     .badge-ai { background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #ffeeba; }
     
-    /* Result Card - Forces text color to black to prevent "invisible text" issues */
+    /* Container for results */
     .result-container { 
         background: white; 
-        padding: 30px; 
+        padding: 25px; 
         border-radius: 12px; 
         box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
         border: 1px solid #e0e0e0; 
         margin-top: 20px; 
-        color: #000000 !important; 
     }
-    
-    /* Table Styling */
-    .styled-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 15px; }
-    .styled-table th { text-align: left; color: #444; background-color: #f1f3f5; padding: 12px; border-bottom: 2px solid #ddd; }
-    .styled-table td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: top; color: #333; }
-    .val-text { font-weight: 700; color: #d63031; }
-    .desc-text { color: #636e72; font-style: italic; font-size: 0.9em; }
     
     /* Sidebar Buttons */
     .stButton>button { width: 100%; text-align: left; border-radius: 6px; height: auto; padding: 10px; }
@@ -156,13 +147,12 @@ def process_query(query):
     return {"type": "general", "content": res.content}
 
 # ==========================================
-# 5. SIDEBAR (Presets)
+# 5. SIDEBAR
 # ==========================================
 with st.sidebar:
     st.header("⚡ Fleet Control")
     st.markdown("Select a vehicle query:")
     
-    # Initialize session state for query input
     if "query_input" not in st.session_state:
         st.session_state.query_input = ""
 
@@ -182,7 +172,7 @@ with st.sidebar:
     if st.button("Chain Tension (Bike)"): set_query("Chain tension adjustment (Bike)")
     
     st.divider()
-    st.markdown("v3.1 • Fixed Render Logic")
+    st.markdown("v3.3 • Native Tables")
 
 # ==========================================
 # 6. MAIN UI
@@ -200,57 +190,62 @@ if st.button("Search Manuals", type="primary"):
         with st.spinner("⚙️ Analyzing Fleet Documents..."):
             result = process_query(query)
 
-        # --- RENDER RESULTS (FIXED BLOCK LOGIC) ---
+        # --- RENDER RESULTS ---
         
         # CASE 1: MANUAL DATA FOUND
         if result['type'] == 'manual':
-            # --- BUILD HTML STRING FIRST ---
             # 1. Badge & Header
-            html_content = f"""
+            st.markdown(f"""
             <div class='result-container'>
                 <span class='badge-manual'>✓ OFFICIAL SOURCE: {result['source']}</span>
-                <h3 style='margin-top:15px; margin-bottom:10px; color:#333;'>Specifications Found</h3>
-            """
+                <h3 style='margin-top:10px; color:black;'>Technical Specifications</h3>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # 2. Build Rows
-            rows = ""
-            for item in result['specs']:
-                unit = item.get('unit') or ""
-                rows += f"""
-                <tr>
-                    <td><strong>{item['component']}</strong></td>
-                    <td class='val-text'>{item['value']} {unit}</td>
-                    <td class='desc-text'>{item.get('description', '-')}</td>
-                </tr>
-                """
+            # 2. CREATE NATIVE DATAFRAME (The Fix)
+            # We convert JSON directly to a Pandas DataFrame.
+            # This GUARANTEES the data will show up.
+            df = pd.DataFrame(result['specs'])
             
-            # 3. Close Table
-            html_content += f"""
-            <table class='styled-table'>
-                <thead>
-                    <tr><th width='35%'>Component / Step</th><th width='25%'>Value / Action</th><th>Notes</th></tr>
-                </thead>
-                <tbody>{rows}</tbody>
-            </table>
-            """
+            # Clean up columns for display
+            if not df.empty:
+                # Reorder and rename columns if they exist
+                desired_cols = ['component', 'value', 'unit', 'description']
+                # Filter to only existing columns
+                cols_to_use = [c for c in desired_cols if c in df.columns]
+                df = df[cols_to_use]
+                
+                # Rename for UI
+                column_map = {
+                    'component': 'Component / Step',
+                    'value': 'Value / Action',
+                    'unit': 'Unit',
+                    'description': 'Notes / Context'
+                }
+                df = df.rename(columns=column_map)
+                
+                # Display using Streamlit's native Table
+                st.dataframe(
+                    df, 
+                    use_container_width=True, 
+                    hide_index=True,
+                    column_config={
+                        "Value / Action": st.column_config.TextColumn(help="The specific value or action required."),
+                    }
+                )
+            else:
+                st.warning("Data found, but table is empty.")
             
-            # 4. Close Div
-            html_content += "</div>"
-            
-            # --- RENDER HTML ---
-            st.markdown(html_content, unsafe_allow_html=True)
-            
-            # --- RENDER IMAGES (Separate Streamlit Elements) ---
+            # 3. Render Images
             if result.get('images'):
                 st.markdown("<h4 style='margin-top:25px; color:#555;'>📷 Visual Reference</h4>", unsafe_allow_html=True)
-                
                 cols = st.columns(min(3, len(result['images'])))
                 for idx, img_path in enumerate(result['images']):
                     with cols[idx % 3]:
                         if os.path.exists(img_path):
                             st.image(img_path, caption=f"Figure {idx+1}", use_container_width=True)
                         else:
-                            st.warning(f"Image not found on disk: {img_path}")
+                            st.warning(f"Image missing: {img_path}")
 
         # CASE 2: GENERAL KNOWLEDGE FALLBACK
         elif result['type'] == 'general':
