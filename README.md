@@ -1,7 +1,7 @@
 # 🚗 Intelligent Vehicle Specification Extraction System (Mechanic AI)
 
 ## Live Link
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://predii-intelligent-ai-bot-x8szf2yk5f.streamlit.app/)
+[![Streamlit App]([https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://predii-intelligent-ai-bot-x8szf2yk5f.streamlit.app/](https://hcltech-project-m97vsgrm5ovy6ryasakqxb.streamlit.app/))
 ---
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
@@ -16,6 +16,8 @@
 Service manuals are often hundreds of pages long with complex table structures, making it difficult for standard AI tools to extract precise values (like torque settings or fluid capacities). This tool uses **Context-Aware Table Processing** to "read" manuals like a mechanic, ensuring users receive accurate, structured JSON data for every query.
 
 ---
+![Dashboard](assets/dashboard.png)
+
 
 ## 🏗️ System Pipeline
 
